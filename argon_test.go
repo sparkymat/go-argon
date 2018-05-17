@@ -17,6 +17,14 @@ var _ = Describe("Argon", func() {
 		stateMachine, err = argon.NewStateMachine(entity, *config)
 	})
 
+	Context("With nil entity", func() {
+		entity = nil
+		config = &validConfig
+		It("should return error", func() {
+			Expect(err).To(HaveOccurred())
+		})
+	})
+
 	Context("With valid entity", func() {
 		entity = &entityType{}
 
@@ -69,4 +77,12 @@ func (et *entityType) GetState() argon.State {
 
 func (et *entityType) SetState(state argon.State) {
 	et.state = state
+}
+
+var validConfig = argon.Config{
+	States: []argon.State{Initial, Pending, Final},
+	Edges: []argon.Edge{
+		{From: Initial, To: Pending, Action: "start"},
+		{From: Pending, To: Final, Action: "finish"},
+	},
 }
