@@ -8,40 +8,44 @@ import (
 )
 
 var _ = Describe("Argon", func() {
-	var stateMachine argon.StateMachine
-	var err error
-	var entity argon.StatefulEntity
-	var config *argon.Config
-
-	BeforeEach(func() {
-		stateMachine, err = argon.NewStateMachine(entity, *config)
-	})
+	var createStateMachine = func(e argon.StatefulEntity, c argon.Config) error {
+		_, err := argon.NewStateMachine(e, c)
+		return err
+	}
 
 	Context("With nil entity", func() {
-		entity = nil
-		config = &validConfig
 		It("should return error", func() {
-			Expect(err).To(HaveOccurred())
+			Expect(createStateMachine(nil, validConfig)).ShouldNot(Succeed())
 		})
 	})
 
 	Context("With valid entity", func() {
-		entity = &entityType{}
+		entity := &entityType{}
 
 		Context("With empty config", func() {
-			config = &argon.Config{}
+			config := argon.Config{}
+
 			It("should return error", func() {
-				Expect(err).To(HaveOccurred())
+				Expect(createStateMachine(entity, config)).ShouldNot(Succeed())
 			})
 		})
 
 		Context("With config baving states but no edges", func() {
-			config = &argon.Config{
+			config := argon.Config{
 				States: []argon.State{Initial, Pending, Final},
 				Edges:  []argon.Edge{},
 			}
+
 			It("should return error", func() {
-				Expect(err).To(HaveOccurred())
+				Expect(createStateMachine(entity, config)).ShouldNot(Succeed())
+			})
+		})
+
+		Context("With valid config", func() {
+			config := validConfig
+
+			It("should not return error", func() {
+				Expect(createStateMachine(entity, config)).Should(Succeed())
 			})
 		})
 	})
