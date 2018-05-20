@@ -83,6 +83,12 @@ func (et *entityType) SetState(state argon.State) {
 	et.state = state
 }
 
+func (et *entityType) BeforeAction(action string) {
+}
+
+func (et *entityType) AfterAction(action string, err error) {
+}
+
 var validConfig = argon.Config{
 	States: []argon.State{Initial, Pending, Final},
 	Edges: []argon.Edge{

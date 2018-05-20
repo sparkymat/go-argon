@@ -33,7 +33,14 @@ func NewStateMachine(entity StatefulEntity, config Config) (StateMachine, error)
 		stateExistence[state] = struct{}{}
 	}
 
+	actionExistence := make(map[string]struct{})
+
 	for edgeIndex, edge := range config.Edges {
+		if _, exists := actionExistence[edge.Action]; exists {
+			return s, errors.New(fmt.Sprintf("Duplicate action in edge %v", edgeIndex))
+		}
+		actionExistence[edge.Action] = struct{}{}
+
 		if _, exists := stateExistence[edge.From]; !exists {
 			return s, errors.New(fmt.Sprintf("Invalid start state for edge %v", edgeIndex))
 		}
@@ -41,20 +48,12 @@ func NewStateMachine(entity StatefulEntity, config Config) (StateMachine, error)
 			return s, errors.New(fmt.Sprintf("Invalid end state for edge %v", edgeIndex))
 		}
 
-		onCallbackName := fmt.Sprintf("On%v", inflect.Capitalize(edge.Action))
-		afterCallbackName := fmt.Sprintf("After%v", inflect.Capitalize(edge.Action))
+		callbackName := fmt.Sprintf("On%v", inflect.Capitalize(edge.Action))
 
-		if edge.OnCallback {
+		if edge.Callback {
 			entityType := reflect.TypeOf(entity)
-			if _, methodExists := entityType.MethodByName(onCallbackName); !methodExists {
-				return s, errors.New(fmt.Sprintf("On callback (%v) for edge %v not found", onCallbackName, edgeIndex))
-			}
-		}
-
-		if edge.AfterCallback {
-			entityType := reflect.TypeOf(entity)
-			if _, methodExists := entityType.MethodByName(afterCallbackName); !methodExists {
-				return s, errors.New(fmt.Sprintf("After callback (%v) for edge %v not found", afterCallbackName, edgeIndex))
+			if _, methodExists := entityType.MethodByName(callbackName); !methodExists {
+				return s, errors.New(fmt.Sprintf("Callback (%v) for edge %v not found", callbackName, edgeIndex))
 			}
 		}
 	}
