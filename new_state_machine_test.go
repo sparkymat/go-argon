@@ -7,7 +7,7 @@ import (
 	argon "github.com/sparkymat/go-argon"
 )
 
-var _ = Describe("Argon", func() {
+var _ = Describe("argon.NewStateMachine", func() {
 	var createStateMachine = func(e argon.StatefulEntity, c argon.Config) error {
 		_, err := argon.NewStateMachine(e, c)
 		return err
@@ -30,10 +30,23 @@ var _ = Describe("Argon", func() {
 			})
 		})
 
-		Context("With config baving states but no edges", func() {
+		Context("With config having states but no edges", func() {
 			config := argon.Config{
 				States: []argon.State{Initial, Pending, Final},
 				Edges:  []argon.Edge{},
+			}
+
+			It("should return error", func() {
+				Expect(createStateMachine(entity, config)).ShouldNot(Succeed())
+			})
+		})
+
+		Context("With config having valid states and edges but no start state", func() {
+			config := argon.Config{
+				States: []argon.State{Initial, Pending, Final},
+				Edges: []argon.Edge{
+					{From: Pending, To: Final, Action: "DoThings"},
+				},
 			}
 
 			It("should return error", func() {
@@ -63,15 +76,11 @@ type entityType struct {
 	state argon.State
 }
 
-type entityTypeWithOn struct {
+type entityTypeWithCallbacks struct {
 	entityType
 }
 
-type entityTypeWithAfter struct {
-	entityType
-}
-
-type entityTypeWithBoth struct {
+type entityTypeWithIncorrectCallbacks struct {
 	entityType
 }
 
@@ -89,8 +98,13 @@ func (et *entityType) BeforeAction(action string) {
 func (et *entityType) AfterAction(action string, err error) {
 }
 
+func (et *entityType) OnAction(action string) error {
+	return nil
+}
+
 var validConfig = argon.Config{
-	States: []argon.State{Initial, Pending, Final},
+	States:     []argon.State{Initial, Pending, Final},
+	StartState: Initial,
 	Edges: []argon.Edge{
 		{From: Initial, To: Pending, Action: "start"},
 		{From: Pending, To: Final, Action: "finish"},

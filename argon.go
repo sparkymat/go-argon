@@ -3,14 +3,12 @@ package argon
 import (
 	"errors"
 	"fmt"
-	"reflect"
-
-	"bitbucket.org/pkg/inflect"
 )
 
 type StateMachine struct {
-	entity StatefulEntity
-	config Config
+	currentState State
+	entity       StatefulEntity
+	config       Config
 }
 
 func NewStateMachine(entity StatefulEntity, config Config) (StateMachine, error) {
@@ -33,6 +31,10 @@ func NewStateMachine(entity StatefulEntity, config Config) (StateMachine, error)
 		stateExistence[state] = struct{}{}
 	}
 
+	if _, startStateExists := stateExistence[config.StartState]; !startStateExists {
+		return s, errors.New("Start state not found in list of states")
+	}
+
 	actionExistence := make(map[string]struct{})
 
 	for edgeIndex, edge := range config.Edges {
@@ -46,15 +48,6 @@ func NewStateMachine(entity StatefulEntity, config Config) (StateMachine, error)
 		}
 		if _, exists := stateExistence[edge.To]; !exists {
 			return s, errors.New(fmt.Sprintf("Invalid end state for edge %v", edgeIndex))
-		}
-
-		callbackName := fmt.Sprintf("On%v", inflect.Capitalize(edge.Action))
-
-		if edge.Callback {
-			entityType := reflect.TypeOf(entity)
-			if _, methodExists := entityType.MethodByName(callbackName); !methodExists {
-				return s, errors.New(fmt.Sprintf("Callback (%v) for edge %v not found", callbackName, edgeIndex))
-			}
 		}
 	}
 

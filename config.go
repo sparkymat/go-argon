@@ -1,6 +1,7 @@
 package argon
 
 type Config struct {
-	States []State
-	Edges  []Edge
+	StartState State
+	States     []State
+	Edges      []Edge
 }
