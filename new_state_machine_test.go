@@ -80,10 +80,6 @@ type entityTypeWithCallbacks struct {
 	entityType
 }
 
-type entityTypeWithIncorrectCallbacks struct {
-	entityType
-}
-
 func (et *entityType) GetState() argon.State {
 	return et.state
 }
@@ -106,7 +102,7 @@ var validConfig = argon.Config{
 	States:     []argon.State{Initial, Pending, Final},
 	StartState: Initial,
 	Edges: []argon.Edge{
-		{From: Initial, To: Pending, Action: "start"},
-		{From: Pending, To: Final, Action: "finish"},
+		{From: Initial, To: Pending, Action: "Start"},
+		{From: Pending, To: Final, Action: "Finish"},
 	},
 }

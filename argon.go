@@ -9,6 +9,7 @@ type StateMachine struct {
 	currentState State
 	entity       StatefulEntity
 	config       Config
+	edgeMap      map[string]Edge
 }
 
 func NewStateMachine(entity StatefulEntity, config Config) (StateMachine, error) {
@@ -54,5 +55,38 @@ func NewStateMachine(entity StatefulEntity, config Config) (StateMachine, error)
 	s.entity = entity
 	s.config = config
 
+	for _, edge := range config.Edges {
+		s.edgeMap[edge.Action] = edge
+	}
+
 	return s, nil
+}
+
+func (sm *StateMachine) Do(action string) error {
+	var edge Edge
+	var edgeExists bool
+
+	if edge, edgeExists = sm.edgeMap[action]; !edgeExists {
+		return errors.New("No such action exists")
+	}
+
+	if sm.currentState != edge.From {
+		return errors.New("Invalid transition")
+	}
+
+	sm.entity.BeforeAction(action)
+
+	sm.entity.SetState(edge.To)
+	sm.currentState = edge.To
+
+	err := sm.entity.OnAction(action)
+
+	if err != nil {
+		sm.entity.SetState(edge.From)
+		sm.currentState = edge.From
+	}
+
+	sm.entity.AfterAction(action, err)
+
+	return err
 }
