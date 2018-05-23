@@ -8,10 +8,10 @@ import (
 )
 
 var _ = Describe("Callbacks", func() {
-	var entity = &entityTypeWithCallbacks{}
+	var entity = &entityTypeWithCallbacks{entityType{State: Initial}}
 	var stateMachine, _ = argon.NewStateMachine(entity, validConfig)
 
 	It("should invoke On callback", func() {
-		Expect(stateMachine.DoAction("Start")).Should(Succeed())
+		Expect(stateMachine.Do("Start")).Should(Succeed())
 	})
 })

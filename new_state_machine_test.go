@@ -41,19 +41,6 @@ var _ = Describe("argon.NewStateMachine", func() {
 			})
 		})
 
-		Context("With config having valid states and edges but no start state", func() {
-			config := argon.Config{
-				States: []argon.State{Initial, Pending, Final},
-				Edges: []argon.Edge{
-					{From: Pending, To: Final, Action: "DoThings"},
-				},
-			}
-
-			It("should return error", func() {
-				Expect(createStateMachine(entity, config)).ShouldNot(Succeed())
-			})
-		})
-
 		Context("With valid config", func() {
 			config := validConfig
 
@@ -73,7 +60,7 @@ const (
 )
 
 type entityType struct {
-	state argon.State
+	State argon.State
 }
 
 type entityTypeWithCallbacks struct {
@@ -81,11 +68,11 @@ type entityTypeWithCallbacks struct {
 }
 
 func (et *entityType) GetState() argon.State {
-	return et.state
+	return et.State
 }
 
 func (et *entityType) SetState(state argon.State) {
-	et.state = state
+	et.State = state
 }
 
 func (et *entityType) BeforeAction(action string) {
@@ -99,8 +86,7 @@ func (et *entityType) OnAction(action string) error {
 }
 
 var validConfig = argon.Config{
-	States:     []argon.State{Initial, Pending, Final},
-	StartState: Initial,
+	States: []argon.State{Initial, Pending, Final},
 	Edges: []argon.Edge{
 		{From: Initial, To: Pending, Action: "Start"},
 		{From: Pending, To: Final, Action: "Finish"},

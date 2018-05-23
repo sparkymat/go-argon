@@ -31,10 +31,6 @@ func NewStateMachine(entity StatefulEntity, config Config) (StateMachine, error)
 		stateExistence[state] = struct{}{}
 	}
 
-	if _, startStateExists := stateExistence[config.StartState]; !startStateExists {
-		return s, errors.New("Start state not found in list of states")
-	}
-
 	actionExistence := make(map[string]struct{})
 
 	for edgeIndex, edge := range config.Edges {
@@ -53,6 +49,7 @@ func NewStateMachine(entity StatefulEntity, config Config) (StateMachine, error)
 
 	s.entity = entity
 	s.config = config
+	s.edgeMap = make(map[string]Edge)
 
 	for _, edge := range config.Edges {
 		s.edgeMap[edge.Action] = edge
