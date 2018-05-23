@@ -6,10 +6,9 @@ import (
 )
 
 type StateMachine struct {
-	currentState State
-	entity       StatefulEntity
-	config       Config
-	edgeMap      map[string]Edge
+	entity  StatefulEntity
+	config  Config
+	edgeMap map[string]Edge
 }
 
 func NewStateMachine(entity StatefulEntity, config Config) (StateMachine, error) {
@@ -70,20 +69,18 @@ func (sm *StateMachine) Do(action string) error {
 		return errors.New("No such action exists")
 	}
 
-	if sm.currentState != edge.From {
+	if sm.entity.GetState() != edge.From {
 		return errors.New("Invalid transition")
 	}
 
 	sm.entity.BeforeAction(action)
 
 	sm.entity.SetState(edge.To)
-	sm.currentState = edge.To
 
 	err := sm.entity.OnAction(action)
 
 	if err != nil {
 		sm.entity.SetState(edge.From)
-		sm.currentState = edge.From
 	}
 
 	sm.entity.AfterAction(action, err)
